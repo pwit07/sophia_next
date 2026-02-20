@@ -128,6 +128,7 @@ public:
     int LLIST[2000];
 
     sophiaevent_output sophiaevent(bool onProton, double Ein, double eps, bool declareChargedPionsStable=false);
+    sophiaevent_output sophiaevent_mod(double E0, double eps, double theta, bool declareChargedPionsStable=false);
     void eventgen(int L0, double E0, double eps, double theta);
     void gamma_h(double Ecm, int ip1, int Imode);
     void DECSIB();

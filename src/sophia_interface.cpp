@@ -110,7 +110,50 @@ sophiaevent_output sophia_interface::sophiaevent(bool onProton, double Ein, doub
           theta = std::acos(theta) * 180. / pi;
     }
 
+    // theta = 90.;
+    // std::cout<<"theta = "<<theta<<std::endl;
+
     eventgen(L0, E0, eps, theta);
+
+    // generate output
+    sophiaevent_output seo;
+    for (int i = 0; i < np; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            seo.outPartP[j][i] = p[j][i];
+        }
+        seo.outPartID[i] = LLIST[i];
+    }
+    seo.Nout = np;
+    return seo;
+}
+
+sophiaevent_output sophia_interface::sophiaevent_mod(double E0, double eps, double theta, bool declareChargedPionsStable) {
+// ****************************************************************************
+//    SOPHIAEVENT
+// 
+//    interface between Sophia and CRPropa
+//    simulate an interaction between p/n of given energy and a photon
+// 
+//    Eric Armengaud, 2005
+//    modified & translated from FORTRAN to C++: Mario Hoerbe, 2020
+// *******************************
+//  onProton = primary particle is proton or neutron
+//  Ein = input energy of primary nucleon in GeV (SOPHIA standard energy unit)
+//  eps = input energy of target photon in GeV (SOPHIA standard energy unit)
+//  declareChargedPionsStable = pi+-0 are set to be stable particles. See array IDB for details
+//  OutPartP = list of 4-momenta + rest masses of output particles (neutrinos approx. 0)
+//  OutPartID = ID list of output particles (PDG IDs)
+//  Nout = number of output particles
+// ****************************************************************************
+    const double pi = 3.141592653;
+
+    if (declareChargedPionsStable) {
+        // IDB[5] = 0;  // pi0 = stable
+        IDB[6] = 0;  // pi+ = stable
+        IDB[7] = 0;  // pi- = stable
+    } 
+
+    eventgen(13, E0, eps, theta);
 
     // generate output
     sophiaevent_output seo;

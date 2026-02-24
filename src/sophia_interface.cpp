@@ -110,9 +110,6 @@ sophiaevent_output sophia_interface::sophiaevent(bool onProton, double Ein, doub
           theta = std::acos(theta) * 180. / pi;
     }
 
-    // theta = 90.;
-    // std::cout<<"theta = "<<theta<<std::endl;
-
     eventgen(L0, E0, eps, theta);
 
     // generate output

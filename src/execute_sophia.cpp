@@ -258,31 +258,33 @@ double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 1
     std::vector <double> X, Y;
     
     X.push_back(0.);
-    Y.push_back(integrand(partID,x,eta,0.,N,nbin,Ep));
+    // Y.push_back(integrand(partID,x,eta,0.,N,nbin,Ep));
+    Y.push_back(0.);
 
     double Xi = 0., dXi = 180./double(Nintegrate);
 
     for(int i=0;i<Nintegrate-1;i++)
     {
         Xi+=dXi;
-        // std::cout<<xi<<"\n";
+
         X.push_back(Xi);
-        Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep));
+        // Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep));
+        Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep)*std::sin(Xi*pi/180.));
     }
 
     X.push_back(180.);
-    Y.push_back(integrand(partID,x,eta,180.,N,nbin,Ep));
+    // Y.push_back(integrand(partID,x,eta,180.,N,nbin,Ep));
+    Y.push_back(0.);
 
 
     double F = 0.;
     
     for(int i=0;i<X.size()-1;i++)
     {
-        // std::cout<<X[i]<<"  "<<Y[i]<<"\n";
         F+=(Y[i+1]+Y[i])*dXi*0.5;
     }
     
-    return F*pi/180.;
+    return 2.*F*(pi/180.);
 }
 
 void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, int N)
@@ -298,7 +300,7 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
 
     while (logx <= logxmax)
     {
-        outfile << x << "\t" << compute_Phi(partID,x,eta,4000,50,1e4,18*2) << "\n";
+        outfile << x << "\t" << compute_Phi(partID,x,eta,2000,50,1e4,18) << "\n";
         logx+=dlogx;
         x = std::pow(10.,logx);
     }
@@ -346,10 +348,10 @@ int main() {
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,20); ///!!!
 
     // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,20);
-    Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
 
-    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,20);
-    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,20); // !!!
+    Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,20);
+    Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,20); // !!!
 
     return 0;
 }

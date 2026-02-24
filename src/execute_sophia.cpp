@@ -243,12 +243,69 @@ double compute_NbinOverNall(int partID, double x, double eta, double theta, int 
 }
 double integrand(int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1.){
 // ****** OUTPUT *****************************************
-// integrand for computation Phi function (integral over the angles)
+// integrand for computation Phi function (integral over the angles) [cm^3/s]
 // *******************************************************
 
     double eps_prim = eps_prime(eta,theta);
     return c*(1. - std::cos(theta* pi / 180.))*crossection(eps_prim)*compute_NbinOverNall(partID,x,eta,theta,N,nbin,Ep);
 
+}
+
+double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 10, double Ep = 1., int Nintegrate = 18){
+// ****** OUTPUT *****************************************
+// value of Phi function from K&A 2008 [cm^3/s]
+// *******************************************************
+    std::vector <double> X, Y;
+    
+    X.push_back(0.);
+    Y.push_back(integrand(partID,x,eta,0.,N,nbin,Ep));
+
+    double Xi = 0., dXi = 180./double(Nintegrate);
+
+    for(int i=0;i<Nintegrate-1;i++)
+    {
+        Xi+=dXi;
+        // std::cout<<xi<<"\n";
+        X.push_back(Xi);
+        Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep));
+    }
+
+    X.push_back(180.);
+    Y.push_back(integrand(partID,x,eta,180.,N,nbin,Ep));
+
+
+    double F = 0.;
+    
+    for(int i=0;i<X.size()-1;i++)
+    {
+        // std::cout<<X[i]<<"  "<<Y[i]<<"\n";
+        F+=(Y[i+1]+Y[i])*dXi*0.5;
+    }
+    
+    return F*pi/180.;
+}
+
+void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, int N)
+{
+    std::ofstream outfile;
+    outfile.open(path.c_str());
+
+
+    outfile << "#x\t" << "Phi [cm^3/s]\n";
+    
+    double logxmin = std::log10(x_a), logxmax = std::log10(x_b), dlogx = (logxmax - logxmin )/double(N);
+    double logx = logxmin, x = std::pow(10.,logx);
+
+    while (logx <= logxmax)
+    {
+        outfile << x << "\t" << compute_Phi(partID,x,eta,4000,50,1e4,18*3) << "\n";
+        logx+=dlogx;
+        x = std::pow(10.,logx);
+    }
+    
+
+    outfile.close();
+    return;
 }
 
 // If you want to see warnings please uncomment line 283 in sophia_interface.cpp file
@@ -263,17 +320,36 @@ int main() {
     // double f = integrand(22,1.e-3,30.,90,10000,10,1e3);
     // std::cout<<"integrand = "<<f<<"\n";
 
-    int k = 0;
-    double f = 0.;
-    for(int i=0;i<180;i=i+10)
-    {
-        f += integrand(22,1.e-3,30.,double(i),10000,10,1e4);
-        // std::cout<<i<<" integrand = "<<f<<"\n";
-        k++;
-    }
+    // int k = 0;
+    // double f = 0.;
+    // for(int i=0;i<180;i=i+10)
+    // {
+    //     f += integrand(22,1.e-3,30.,double(i),10000,10,1e4);
+    //     // std::cout<<i<<" integrand = "<<f<<"\n";
+    //     k++;
+    // }
 
-    f = f/double(k);
-    std::cout<<"Phi = "<<f<<"\n";
+    // f = f/double(k);
+    // std::cout<<"Phi = "<<f<<"\n";
+
+    double eta_0 = 0.313;
+
+    // double x = 1.e-1;
+    // double eta = 1.5*eta_0;
+
+    // std::cout<<"Phi = "<<x*compute_Phi(22,x,eta,10000,10,1e4,18)<<"\n";
+
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,20);
+
+    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,20);
+    Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,20); ///!!!
+
+    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
+
+    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,20); // !!!
 
     return 0;
 }

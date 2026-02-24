@@ -298,7 +298,7 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
 
     while (logx <= logxmax)
     {
-        outfile << x << "\t" << compute_Phi(partID,x,eta,4000,50,1e4,18*3) << "\n";
+        outfile << x << "\t" << compute_Phi(partID,x,eta,4000,50,1e4,18*2) << "\n";
         logx+=dlogx;
         x = std::pow(10.,logx);
     }
@@ -343,10 +343,10 @@ int main() {
     // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,20);
 
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,20);
-    Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,20); ///!!!
+    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,20); ///!!!
 
     // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,20);
-    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
+    Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
 
     // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,20);
     // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,20); // !!!

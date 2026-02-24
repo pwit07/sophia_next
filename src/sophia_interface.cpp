@@ -280,7 +280,7 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
     // check for threshold:
     const double sth = 1.1646;
     if (s < sth) {
-        std::cout << "input energy below threshold for photopion production! sqrt(s) = " << std::sqrt(s) << std::endl;
+        // std::cout << "input energy below threshold for photopion production! sqrt(s) = " << std::sqrt(s) << std::endl;
         np = 0;
         return;
     }

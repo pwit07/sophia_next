@@ -19,14 +19,14 @@ const double mp2c4 = 0.880354511;
 class sophia_histogram
 {
     private:
-        int eventCounter = 1, nbin, partID, N;
+        int eventCounter = 0, nbin, partID;
         double eta, theta, Ep, Emin, Emax, logEmin, logEmax, dlogE;
         std::vector <int> eventID;
         std::vector <int> PDG;
         std::vector <double> EGeV;
         std::vector <int> H;
     public:
-        sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, int nN);
+        sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin);
         ~sophia_histogram(){};
         
         int find_index(double E);
@@ -40,14 +40,13 @@ class sophia_histogram
         double NbinOverNall(double x);
 };
 
-sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, int nN)
+sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin)
 {
     eta = neta;
     Ep = nEp;
     theta = ntheta;
 
     nbin = nnbin;
-    N = nN;
     partID = npartID;
     
     for(int i=0;i<nbin;i++)
@@ -61,7 +60,7 @@ void sophia_histogram::add(const sophiaevent_output &seo){
 // add sophiaevent_output seo data to this class
 // *******************************************************
     for (int i = 0; i < seo.Nout; ++i) {
-        eventID.push_back(eventCounter);
+        eventID.push_back(eventCounter+1);
         PDG.push_back(ID_sophia_to_PDG(seo.outPartID[i]));
         EGeV.push_back(seo.outPartP[3][i]);    
     }
@@ -93,7 +92,7 @@ void sophia_histogram::make_hist(){
             Emax = EGeV[0];
             check = true;
         }
-        if(check == true)
+        else
         {
             if(EGeV[i]<Emin){Emin = EGeV[i];}
             if(EGeV[i]>Emax){Emax = EGeV[i];}
@@ -131,7 +130,7 @@ int sophia_histogram::find_index(double EGeV){
 // *******************************************************
     int index = static_cast<int>((std::log10(EGeV)-logEmin)/dlogE);
         
-    if(index == nbin){index--;}
+    if(index >= nbin){index = nbin-1;}
     if(index < 0){index = 0;}
 
     return index;
@@ -164,7 +163,7 @@ double sophia_histogram::NbinOverNall(double x){
 // *******************************************************
     int index = find_index(x*Ep);
 
-    return double(H[index])/double(N);
+    return double(H[index])/double(eventCounter);
 }
 
 
@@ -228,7 +227,7 @@ double compute_NbinOverNall(int partID, double x, double eta, double theta, int 
 // *******************************************************
     static sophia_interface SI;
 
-    sophia_histogram HIST(partID,eta,theta,Ep,nbin,N);
+    sophia_histogram HIST(partID,eta,theta,Ep,nbin);
 
     for(int i=0;i<N;i++){
         sophiaevent_output seo = SI.sophiaevent_mod(Ep, (mp2c4*eta/(4.*Ep)), theta, false);
@@ -326,7 +325,7 @@ std::string partName(int partID){
             return "pi-";
             break;
         default:
-            throw std::runtime_error("Unkown particle ID!");
+            throw std::runtime_error("Unknown particle ID!");
     }
 }
 

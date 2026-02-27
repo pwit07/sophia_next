@@ -255,10 +255,8 @@ double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 1
 // ****** OUTPUT *****************************************
 // value of Phi function from K&A 2008 [cm^3/s]
 // *******************************************************
-    std::vector <double> X, Y;
+    std::vector <double> Y;
     
-    X.push_back(0.);
-    // Y.push_back(integrand(partID,x,eta,0.,N,nbin,Ep));
     Y.push_back(0.);
 
     double Xi = 0., dXi = 180./double(Nintegrate);
@@ -267,24 +265,69 @@ double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 1
     {
         Xi+=dXi;
 
-        X.push_back(Xi);
-        // Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep));
         Y.push_back(integrand(partID,x,eta,Xi,N,nbin,Ep)*std::sin(Xi*pi/180.));
     }
 
-    X.push_back(180.);
-    // Y.push_back(integrand(partID,x,eta,180.,N,nbin,Ep));
     Y.push_back(0.);
-
 
     double F = 0.;
     
-    for(int i=0;i<X.size()-1;i++)
+    for(int i=0;i<Y.size()-1;i++)
     {
-        F+=(Y[i+1]+Y[i])*dXi*0.5;
+        F+=(Y[i+1]+Y[i]);
     }
     
-    return F*(pi/180.);
+    return F*(pi/180.)*dXi*0.5;
+}
+
+std::string partName(int partID){
+    switch (partID)
+    {
+        case 1000010010:
+            return "proton";
+            break;
+        case 1000000010:
+            return "neutron";
+            break;
+        case -1000010010:
+            return "antiproton";
+            break;
+        case -1000000010:
+            return "antineutron";
+            break;
+        case 22:
+            return "photon";
+            break;
+        case 11:
+            return "electron";
+            break;
+        case -11:
+            return "positron";
+            break;
+        case 12:
+            return "electron neutrino";
+            break;
+        case -12:
+            return "electron antineutrino";
+            break;
+        case 14:
+            return "muon neutrino";
+            break;
+        case -14:
+            return "muon antineutrino";
+            break;
+        case 111:
+            return "pi0";
+            break;
+        case 211:
+            return "pi+";
+            break;
+        case -211:
+            return "pi-";
+            break;
+        default:
+            throw std::runtime_error("Unkown particle ID!");
+    }
 }
 
 void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, int N)
@@ -293,6 +336,9 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
     outfile.open(path.c_str());
 
 
+    // std::string id = partName(partID);
+    // outfile << "#Particle type: " << id << "\n";
+    
     outfile << "#x\t" << "Phi [cm^3/s]\n";
     
     double logxmin = std::log10(x_a), logxmax = std::log10(x_b), dlogx = (logxmax - logxmin )/double(N);
@@ -305,7 +351,6 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
         x = std::pow(10.,logx);
     }
     
-
     outfile.close();
     return;
 }
@@ -314,25 +359,6 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
 
 int main() {
     std::cout.precision(10);
-
-    // generate_events(22,10000,1.,1e1,90.,1e3);
-
-    // double f = compute_Nbin_Nall(22,1.e-3,1.e1,90,10000,10,1e3);
-    
-    // double f = integrand(22,1.e-3,30.,90,10000,10,1e3);
-    // std::cout<<"integrand = "<<f<<"\n";
-
-    // int k = 0;
-    // double f = 0.;
-    // for(int i=0;i<180;i=i+10)
-    // {
-    //     f += integrand(22,1.e-3,30.,double(i),10000,10,1e4);
-    //     // std::cout<<i<<" integrand = "<<f<<"\n";
-    //     k++;
-    // }
-
-    // f = f/double(k);
-    // std::cout<<"Phi = "<<f<<"\n";
 
     double eta_0 = 0.313;
 

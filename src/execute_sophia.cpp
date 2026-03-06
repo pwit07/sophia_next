@@ -26,7 +26,7 @@ class sophia_histogram{
     private:
         bool check_make_his = false;
         int eventCounter = 0, nbin, partID;
-        double eta, theta, Ep, logxmin, logxmax, dlogx;
+        double eta, theta, Ep, log10xmin, log10xmax, dlog10x;
         std::vector <int> eventID;
         std::vector <int> PDG;
         std::vector <double> EGeV;
@@ -61,14 +61,14 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
     
     outfile << "#x\t" << "Phi [cm^3/s]\n";
     
-    double logxmin = std::log10(x_a), logxmax = std::log10(x_b), dlogx = (logxmax - logxmin )/double(N);
-    double logx = logxmin, x = std::pow(10.,logx);
+    double log10xmin = std::log10(x_a), log10xmax = std::log10(x_b), dlog10x = (log10xmax - log10xmin )/double(N);
+    double log10x = log10xmin, x = std::pow(10.,log10x);
 
-    while (logx <= logxmax)
+    while (log10x <= log10xmax)
     {
         outfile << x << "\t" << x*compute_Phi(partID,x,eta,1e4,100,1e2,18) << "\n";
-        logx+=dlogx;
-        x = std::pow(10.,logx);
+        log10x+=dlog10x;
+        x = std::pow(10.,log10x);
     }
     
     outfile.close();
@@ -142,9 +142,9 @@ sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, doub
 
     nbin = nnbin;
 
-    logxmin = std::log10(nxmin);
-    logxmax = std::log10(nxmax);
-    dlogx = (logxmax - logxmin)/nbin;
+    log10xmin = std::log10(nxmin);
+    log10xmax = std::log10(nxmax);
+    dlog10x = (log10xmax - log10xmin)/nbin;
 
     for(int i=0;i<nbin;i++)
     {
@@ -212,7 +212,7 @@ int sophia_histogram::find_index(double x){
 // ****** OUTPUT *****************************************
 // index = index corresponding to the energy EGeV of produced particle []
 // *******************************************************
-    int index = static_cast<int>((std::log10(x)-logxmin)/dlogx);
+    int index = static_cast<int>((std::log10(x)-log10xmin)/dlog10x);
         
     if(index >= nbin){index = nbin-1;}
     if(index < 0){index = 0;}
@@ -226,7 +226,7 @@ double sophia_histogram::x_i(int index){
 // ****** OUTPUT *****************************************
 // EGeV = energy of produced particle (in lab frame) [GeV]
 // *******************************************************
-    return std::pow(10.,logxmin+double(index)*dlogx);
+    return std::pow(10.,log10xmin+double(index)*dlog10x);
 }
 
 void sophia_histogram::print_hist(){
@@ -245,7 +245,10 @@ double sophia_histogram::value(double x){
 // ****** OUTPUT *****************************************
 // histogram []
 // *******************************************************
-    return (((double(H[find_index(x)])/double(eventCounter))/dlogx)/x)/std::log(10);
+// dN/dlog(x) = dN/dlog10(x) / log(10) = E * dN/dE
+// dN/dx = (dN/dlog(x))/x = (dN/dlog10(x))/(x*log(10))
+// *******************************************************
+    return (((double(H[find_index(x)])/double(eventCounter))/dlog10x)/x)/std::log(10);
 }
 
 std::string partName(int partID){

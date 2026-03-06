@@ -21,12 +21,12 @@ double eps_prime(double eta, double theta);
 
 double crossection(double eps_prime);
 
-// class computing histogram and N_bin / N_all values
+// class computing histogram
 class sophia_histogram{
     private:
         bool check_make_his = false;
         int eventCounter = 0, nbin, partID;
-        double eta, theta, Ep, Emin, Emax, logEmin, logEmax, dlogE, logxmin, logxmax, dlogx;
+        double eta, theta, Ep, logxmin, logxmax, dlogx;
         std::vector <int> eventID;
         std::vector <int> PDG;
         std::vector <double> EGeV;
@@ -35,20 +35,20 @@ class sophia_histogram{
         sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, double nEmin, double nEmax);
         ~sophia_histogram(){};
         
-        int find_index(double E);
-        double E_i(int index);
+        int find_index(double x);
+        double x_i(int index);
         
         void add(const sophiaevent_output &seo);
         void print_data();
         void make_hist();
         void print_hist();
 
-        double NbinOverNall(double x);
+        double value(double x);
 };
 
 std::string partName(int partID);
 
-double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-5);
+double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-6);
 
 double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 10, double Ep = 1., int Ntheta = 2*18, double xmin = 1.e-6);
 
@@ -66,7 +66,7 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
 
     while (logx <= logxmax)
     {
-        outfile << x << "\t" << x*compute_Phi(partID,x,eta,1e4,100,1e3,18) << "\n";
+        outfile << x << "\t" << x*compute_Phi(partID,x,eta,1e4,100,1e2,18) << "\n";
         logx+=dlogx;
         x = std::pow(10.,logx);
     }
@@ -87,17 +87,17 @@ int main() {
 
     // std::cout<<"Phi = "<<x*compute_Phi(22,x,eta,10000,10,1e4,18)<<"\n";
 
-    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,20);
-    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,50);
 
-    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,20);
-    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,20); ///!!!
+    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,50); ///!!!
 
-    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,20);
-    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,50);
+    Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,50);
 
-    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,20);
-    Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,20); // !!!
+    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,50); // !!!
 
     return 0;
 }
@@ -133,7 +133,7 @@ double crossection(double eps_prime){
     return SI.crossection(eps_prime,3,13)*1.e-30; 
 }
 
-sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, double nEmin, double nEmax){
+sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, double nxmin, double nxmax){
     partID = npartID;
 
     eta = neta;
@@ -141,15 +141,9 @@ sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, doub
     theta = ntheta;
 
     nbin = nnbin;
-    Emin = nEmin;
-    Emax = nEmax;
 
-    logEmin = std::log10(Emin);
-    logEmax = std::log10(Emax);
-    dlogE = (logEmax-logEmin)/nbin;
-
-    logxmin = std::log10(Emin/Ep);
-    logxmax = std::log10(Emax/Ep);
+    logxmin = std::log10(nxmin);
+    logxmax = std::log10(nxmax);
     dlogx = (logxmax - logxmin)/nbin;
 
     for(int i=0;i<nbin;i++)
@@ -183,37 +177,42 @@ void sophia_histogram::print_data(){
 
 void sophia_histogram::make_hist(){
 // ****** OUTPUT *****************************************
-// table H[i] filled with a number of particles corresponding to the energy E_i(i) 
+// table H[i] filled with a number of particles corresponding to the value x_i(i) 
 // *******************************************************
+    static bool check_next_use = false;
+
     if(check_make_his == false)
     {
-        for(int i=0;i<nbin;i++)
+        if(check_next_use==false)
         {
-            H[i] = 0;
+            check_next_use = true;
         }
-
-        int index; 
+        else
+        {
+            for(int i=0;i<nbin;i++)
+            {
+                H[i] = 0;
+            }
+        }
 
         for(int i=0;i<eventID.size();i++)
         {
             if(PDG[i] == partID)
             {
-                index = find_index(EGeV[i]);
-
-                H[index]++;
+                H[find_index(EGeV[i]/Ep)]++;
             }
         }
         check_make_his = true;
     }
 }
 
-int sophia_histogram::find_index(double EGeV){
+int sophia_histogram::find_index(double x){
 // ****** INPUT ******************************************
 // EGeV = energy of produced particle (in lab frame) [GeV]
 // ****** OUTPUT *****************************************
 // index = index corresponding to the energy EGeV of produced particle []
 // *******************************************************
-    int index = static_cast<int>((std::log10(EGeV)-logEmin)/dlogE);
+    int index = static_cast<int>((std::log10(x)-logxmin)/dlogx);
         
     if(index >= nbin){index = nbin-1;}
     if(index < 0){index = 0;}
@@ -221,13 +220,13 @@ int sophia_histogram::find_index(double EGeV){
     return index;
 }
 
-double sophia_histogram::E_i(int index){
+double sophia_histogram::x_i(int index){
 // ****** INPUT ******************************************
 // index = index corresponding to the energy EGeV of produced particle []
 // ****** OUTPUT *****************************************
 // EGeV = energy of produced particle (in lab frame) [GeV]
 // *******************************************************
-    return std::pow(10.,logEmin+double(index)*dlogE);
+    return std::pow(10.,logxmin+double(index)*dlogx);
 }
 
 void sophia_histogram::print_hist(){
@@ -236,19 +235,17 @@ void sophia_histogram::print_hist(){
 // *******************************************************
     for(int i=0;i<nbin;i++)
     {
-        std::cout<<E_i(i)/Ep<<" "<<H[i]<<"\n";
+        std::cout<<x_i(i)<<" "<<H[i]<<"\n";
     }
 }
 
-double sophia_histogram::NbinOverNall(double x){
+double sophia_histogram::value(double x){
 // ****** INPUT ******************************************
 // x = EGeV / Ep = energy EGeV of produced particle divided by energy of proton (both in lab frame) [GeV/GeV]
 // ****** OUTPUT *****************************************
-// N_bin / N_all value []
+// histogram []
 // *******************************************************
-    int index = find_index(x*Ep);
-
-    return (((double(H[index])/double(eventCounter))/dlogx)/x)/std::log(10);
+    return (((double(H[find_index(x)])/double(eventCounter))/dlogx)/x)/std::log(10);
 }
 
 std::string partName(int partID){
@@ -301,7 +298,6 @@ std::string partName(int partID){
     }
 }
 
-
 double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N, int nbin, double Ep, double xmin){
 // ****** INPUT ******************************************
 // partID = sophia ID of produced particles: 
@@ -323,9 +319,7 @@ double integrand(sophia_histogram &HIST, int partID, double x, double eta, doubl
 // ****** OUTPUT *****************************************
 // integrand for computation Phi function (integral over the angles) [cm^3/(s rad)]
 // *******************************************************
-
-    double eps_prim = eps_prime(eta,theta);
-    return c*(1. - std::cos(theta* pi / 180.))*crossection(eps_prim)*HIST.NbinOverNall(x);
+    return c*(1.-std::cos(theta*pi/180.))*crossection(eps_prime(eta,theta))*HIST.value(x);
 
 }
 
@@ -334,7 +328,9 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
 // value of Phi function from K&A 2008 [cm^3/s]
 // *******************************************************    
     static sophia_interface SI;
+    static sophiaevent_output seo;
 
+    double eps = (mp2c4*eta/(4.*Ep));
     std::vector <double> Y;
 
     Y.push_back(0.);
@@ -345,10 +341,10 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
     {
         theta_i+=dtheta;
 
-        sophia_histogram HIST(partID,eta,theta_i,Ep,nbin,xmin*Ep,Ep);
+        sophia_histogram HIST(partID,eta,theta_i,Ep,nbin,xmin,1.);
 
         for(int i=0;i<N;i++){
-            sophiaevent_output seo = SI.sophiaevent_mod(Ep, (mp2c4*eta/(4.*Ep)), theta_i, false);
+            seo = SI.sophiaevent_mod(Ep, eps, theta_i, false);
             HIST.add(seo);
         }
 
@@ -367,5 +363,5 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
         F+=(Y[i+1]+Y[i]);
     }
     
-    return F*(pi/180.)*dtheta*0.5/(2.);
+    return (F*(pi/180.)*dtheta*0.5)/(2.);
 }

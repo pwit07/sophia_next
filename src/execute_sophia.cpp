@@ -94,10 +94,16 @@ int main() {
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,50); ///!!!
 
     // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_1.5eta0_sophia.txt",-14,1.e-4,1.,1.5*eta_0,50);
-    Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig4_values/muon_antineutrino_30eta0_sophia.txt",-14,1.e-4,1.,30.*eta_0,50);
 
     // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_1.5eta0_sophia.txt",14,1.e-4,1.,1.5*eta_0,50);
     // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,50); // !!!
+
+    // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_3eta0_sophia.txt",11,1.e-4,1.,3*eta_0,50);
+     Phi2File("./src/kelner_aharonian_2008/fig_values/electron_10eta0_sophia.txt",11,1.e-4,1.,10*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_30eta0_sophia.txt",11,1.e-4,1.,30*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_100eta0_sophia.txt",11,1.e-4,1.,100*eta_0,50);
+
 
     return 0;
 }

@@ -129,7 +129,9 @@ public:
 
     sophiaevent_output sophiaevent(bool onProton, double Ein, double eps, bool declareChargedPionsStable=false);
     sophiaevent_output sophiaevent_mod(double E0, double eps, double theta, bool declareChargedPionsStable=false);
+    sophiaevent_output sophiaevent_mod2(double s, bool declareChargedPionsStable=false);
     void eventgen(int L0, double E0, double eps, double theta);
+    void eventgen_mod2(int L0, double s);
     void gamma_h(double Ecm, int ip1, int Imode);
     void DECSIB();
     DECPAR_zero_output DECPAR_zero(double P0[5], int ND, int LL[10]);

@@ -32,7 +32,8 @@ class sophia_histogram{
         std::vector <double> EGeV;
         std::vector <int> H;
     public:
-        sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, double nEmin, double nEmax);
+        sophia_histogram(int npartID, double neta, double ntheta, double nEp, int nnbin, double nxmin, double nxmax);
+        sophia_histogram(int npartID, int nnbin, double nsmin, double nsmax);
         ~sophia_histogram(){};
         
         int find_index(double x);
@@ -41,6 +42,7 @@ class sophia_histogram{
         void add(const sophiaevent_output &seo);
         void print_data();
         void make_hist();
+        void make_hist_s();
         void print_hist();
 
         double value(double x);
@@ -75,6 +77,8 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
     return;
 }
 
+void compute_s_tabs(int partID, int N, double s, int nbin=20, double smin=1.e-3, double smax=1.e3);
+
 // If you want to see warnings please uncomment line 283 in sophia_interface.cpp file
 
 int main() {
@@ -87,7 +91,7 @@ int main() {
 
     // std::cout<<"Phi = "<<x*compute_Phi(22,x,eta,10000,10,1e4,18)<<"\n";
 
-    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,50);
+    Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,50);
     // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,50);
 
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,50);
@@ -100,10 +104,11 @@ int main() {
     // Phi2File("./src/kelner_aharonian_2008/fig5_values/muon_neutrino_30eta0_sophia.txt",14,1.e-4,1.,30.*eta_0,50); // !!!
 
     // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_3eta0_sophia.txt",11,1.e-4,1.,3*eta_0,50);
-     Phi2File("./src/kelner_aharonian_2008/fig_values/electron_10eta0_sophia.txt",11,1.e-4,1.,10*eta_0,50);
+    //  Phi2File("./src/kelner_aharonian_2008/fig_values/electron_10eta0_sophia.txt",11,1.e-4,1.,10*eta_0,50);
     // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_30eta0_sophia.txt",11,1.e-4,1.,30*eta_0,50);
     // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_100eta0_sophia.txt",11,1.e-4,1.,100*eta_0,50);
 
+    // compute_s_tabs(22,1e0,1e1);
 
     return 0;
 }
@@ -150,6 +155,21 @@ sophia_histogram::sophia_histogram(int npartID, double neta, double ntheta, doub
 
     log10xmin = std::log10(nxmin);
     log10xmax = std::log10(nxmax);
+    dlog10x = (log10xmax - log10xmin)/nbin;
+
+    for(int i=0;i<nbin;i++)
+    {
+        H.push_back(0);
+    }
+}
+
+sophia_histogram::sophia_histogram(int npartID, int nnbin, double nsmin, double nsmax){
+    partID = npartID;
+
+    nbin = nnbin;
+
+    log10xmin = std::log10(nsmin);
+    log10xmax = std::log10(nsmax);
     dlog10x = (log10xmax - log10xmin)/nbin;
 
     for(int i=0;i<nbin;i++)
@@ -206,6 +226,37 @@ void sophia_histogram::make_hist(){
             if(PDG[i] == partID)
             {
                 H[find_index(EGeV[i]/Ep)]++;
+            }
+        }
+        check_make_his = true;
+    }
+}
+
+void sophia_histogram::make_hist_s(){
+// ****** OUTPUT *****************************************
+// table H[i] filled with a number of particles corresponding to the value x_i(i) 
+// *******************************************************
+    static bool check_next_use = false;
+
+    if(check_make_his == false)
+    {
+        if(check_next_use==false)
+        {
+            check_next_use = true;
+        }
+        else
+        {
+            for(int i=0;i<nbin;i++)
+            {
+                H[i] = 0;
+            }
+        }
+
+        for(int i=0;i<eventID.size();i++)
+        {
+            if(PDG[i] == partID)
+            {
+                H[find_index(EGeV[i])]++;
             }
         }
         check_make_his = true;
@@ -373,4 +424,22 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
     }
     
     return (F*(pi/180.)*dtheta*0.5)/(2.);
+}
+
+void compute_s_tabs(int partID, int N, double s, int nbin, double smin, double smax)
+{
+    static sophia_interface SI;
+    static sophiaevent_output seo;
+
+    sophia_histogram HIST(partID,nbin,smin,smax);
+
+    for(int i=0;i<N;i++){
+        seo = SI.sophiaevent_mod2(s, false);
+        HIST.add(seo);
+    }
+    // HIST.print_data();
+    HIST.make_hist_s();
+    HIST.print_hist();
+    
+    return;
 }

@@ -164,6 +164,46 @@ sophiaevent_output sophia_interface::sophiaevent_mod(double E0, double eps, doub
     return seo;
 }
 
+sophiaevent_output sophia_interface::sophiaevent_mod2(double s, bool declareChargedPionsStable) {
+// ****************************************************************************
+//    SOPHIAEVENT
+// 
+//    interface between Sophia and CRPropa
+//    simulate an interaction between p/n of given energy and a photon
+// 
+//    Eric Armengaud, 2005
+//    modified & translated from FORTRAN to C++: Mario Hoerbe, 2020
+// *******************************
+//  onProton = primary particle is proton or neutron
+//  Ein = input energy of primary nucleon in GeV (SOPHIA standard energy unit)
+//  eps = input energy of target photon in GeV (SOPHIA standard energy unit)
+//  declareChargedPionsStable = pi+-0 are set to be stable particles. See array IDB for details
+//  OutPartP = list of 4-momenta + rest masses of output particles (neutrinos approx. 0)
+//  OutPartID = ID list of output particles (PDG IDs)
+//  Nout = number of output particles
+// ****************************************************************************
+    const double pi = 3.141592653;
+
+    if (declareChargedPionsStable) {
+        // IDB[5] = 0;  // pi0 = stable
+        IDB[6] = 0;  // pi+ = stable
+        IDB[7] = 0;  // pi- = stable
+    } 
+
+    eventgen_mod2(13, s);
+
+    // generate output
+    sophiaevent_output seo;
+    for (int i = 0; i < np; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            seo.outPartP[j][i] = p[j][i];
+        }
+        seo.outPartID[i] = LLIST[i];
+    }
+    seo.Nout = np;
+    return seo;
+}
+
 void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
 // *******************************************************
 // ** subroutine for photopion production of            **
@@ -206,7 +246,7 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
     // incoming photon
     P_gam[0] = eps * std::sin(theta * pi / 180.);
     P_gam[1] = 0.;
-    P_gam[2] = -eps * std::cos(theta * pi / 180.);
+    P_gam[2] = eps * std::cos(theta * pi / 180.);
     P_gam[3] = eps;
 
     double Esum  = P_nuc[3] + P_gam[3];
@@ -360,6 +400,121 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
         p[2][I] = poa.PZ;
         p[3][I] = poa.E;
     }
+
+    return;
+}
+
+void sophia_interface::eventgen_mod2(int L0, double s) {
+// *******************************************************
+// ** subroutine for photopion production of            **
+// ** relativistic nucleons in a soft photon field      **
+// ** subroutine for SOPHIA inVersion 1.2               **
+// ****** INPUT ******************************************
+//  E0 = energy of incident proton (in lab frame) [in GeV]
+//  eps = energy of incident photon [in GeV] (in lab frame)
+//  theta = angle between incident proton and photon [in degrees]
+//  L0 = code number of the incident nucleon
+// ****** OUTPUT *************************************************
+//  P(2000,5) = 5-momentum of produced particles 
+//  LLIST(2000) = code numbers of produced particles
+//  NP = number of produced particles
+// ***************************************************************
+// ** Date: 20/01/98       **
+// ** correct.:19/02/98    **
+// ** change:  23/05/98    **
+// ** last change:06/09/98 **
+// ** authors: A.Muecke    **
+// **          R.Engel     **
+// **************************
+    const int IRESMAX = 9;
+    const double pi = 3.1415926;
+
+    double P_nuc[4] = {0.};
+    double P_gam[4] = {0.};
+    double P_sum[4] = {0.};
+    double PC[4] = {0.};
+    double GamBet[4] = {0.};
+    int Icount = 0;
+
+    // proton mass
+    double pm = AM[L0 - 1];
+
+    // double s = pm * pm + 2. * eps * E0 * (1. - betap * std::cos(theta * pi / 180.));
+    double sqsm = std::sqrt(s);
+    double eps_prime = (s - pm * pm) / 2. / pm;
+
+    // check for threshold:
+    const double sth = 1.1646;
+    if (s < sth) {
+        // std::cout << "input energy below threshold for photopion production! sqrt(s) = " << std::sqrt(s) << std::endl;
+        np = 0;
+        return;
+    }
+
+    // 200
+    Icount++;
+
+// ********************************************************************
+// c decide which process occurs:                                   ***
+// c (1) decay of resonance                                         ***
+// c (2) direct pion production (interaction of photon with         ***
+// c     virtual pions in nucleon cloud) and diffractive scattering ***
+// c (3) multipion production                                       ***
+// ********************************************************************
+
+    int Imode = dec_inter3(eps_prime, L0);
+    // ******* PARTICLE PRODUCTION *****************
+    if (Imode <= 5) {
+
+        // direct/multipion/diffractive scattering production channel:
+        gamma_h(sqsm, L0, Imode);
+
+    } else if (Imode == 6) {
+
+        // Resonances:
+        // decide which resonance decays with ID=IRES in list:
+        // IRESMAX = number of considered resonances = 9 so far
+        int IRES = 0;
+
+        // 46
+        IRES = dec_res2(eps_prime, IRESMAX, L0);
+        int Nproc = 10 + IRES;
+        dec_proc2_output dpo = dec_proc2(eps_prime, IRES, L0);
+        int IPROC = dpo.IPROC;
+        int IRANGE = dpo.IRANGE;
+
+        // 2-particle decay of resonance in CM system:
+        np = 2;
+        RES_DECAY3(IRES, IPROC, IRANGE, s, L0);
+        DECSIB();
+    } else {
+        throw std::runtime_error("eventgen: invalid Imode");
+    }
+
+    // consider only stable particles:
+    int istable = 0;
+    for (int i = 0; i < np; ++i) {
+         if (std::abs(LLIST[i]) < 10000) {
+          istable++;
+          LLIST[istable - 1] = LLIST[i];
+          p[0][istable - 1] = p[0][i];
+          p[1][istable - 1] = p[1][i];
+          p[2][istable - 1] = p[2][i];
+          p[3][istable - 1] = p[3][i];
+          p[4][istable - 1] = p[4][i];
+        }
+    }
+    if (np > istable) {
+        for (int i = istable; i < np; ++i) {
+            LLIST[i] = 0;
+            p[0][i] = 0.;
+            p[1][i] = 0.;
+            p[2][i] = 0.;
+            p[3][i] = 0.;
+            p[4][i] = 0.;
+        }
+    }
+    np = istable;
 
     return;
 }

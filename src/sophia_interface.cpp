@@ -208,7 +208,7 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
 // *******************************************************
 // ** subroutine for photopion production of            **
 // ** relativistic nucleons in a soft photon field      **
-// ** subroutine for SOPHIA inVersion 1.2               **
+// ** subroutine for SOPHIA inVersion 2.01              **
 // ****** INPUT ******************************************
 //  E0 = energy of incident proton (in lab frame) [in GeV]
 //  eps = energy of incident photon [in GeV] (in lab frame)
@@ -228,6 +228,9 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
 // **************************
     const int IRESMAX = 9;
     const double pi = 3.1415926;
+    const double deg2rad = 0.0174532925199433;
+
+    double theta_rad = theta*deg2rad;
 
     double P_nuc[4] = {0.};
     double P_gam[4] = {0.};
@@ -244,9 +247,9 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
     P_nuc[3] = E0;
 
     // incoming photon
-    P_gam[0] = eps * std::sin(theta * pi / 180.);
+    P_gam[0] = eps * std::sin(theta_rad);
     P_gam[1] = 0.;
-    P_gam[2] = eps * std::cos(theta * pi / 180.);
+    P_gam[2] = eps * std::cos(theta_rad);
     P_gam[3] = eps;
 
     double Esum  = P_nuc[3] + P_gam[3];
@@ -259,13 +262,17 @@ void sophia_interface::eventgen(int L0, double E0, double eps, double theta) {
     double gammap = E0 / pm;
     double xx = 1. / gammap;
     double betap = 0.;
+    double s;
     if (gammap > 1000.) {
-        betap = 1. - 0.5 * xx * xx - 0.125 * xx * xx * xx * xx;
+        // betap = 1. - 0.5 * xx * xx - 0.125 * xx * xx * xx * xx;
+        double x1 = 1. - std::cos(theta_rad);
+        double x2 = cos(theta_rad)*(0.5 * xx * xx + 0.125* xx * xx * xx * xx);
+        s = pm*pm+2.*E0*eps*(x1+x2);
     } else {
         betap = std::sqrt(1. - xx) * std::sqrt(1. + xx);
+        s = pm * pm + 2. * eps * E0 * (1. - betap * std::cos(theta_rad));
     }
-
-    double s = pm * pm + 2. * eps * E0 * (1. - betap * std::cos(theta * pi / 180.));
+    // double s = pm * pm + 2. * eps * E0 * (1. - betap * std::cos(theta * pi / 180.));
     double sqsm = std::sqrt(s);
     double eps_prime = (s - pm * pm) / 2. / pm;
 

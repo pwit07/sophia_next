@@ -6,6 +6,8 @@
 
 const double pi = 3.1415926;
 
+const double eta_0 = 0.313;
+
 // speed of light value [cm/s]
 const double c = 2.99792458e10; 
 
@@ -46,11 +48,16 @@ class sophia_histogram{
         void print_hist();
 
         double value(double x);
+        double integrand(double x);
+
+        void save_integrand(std::string path);
 };
 
 std::string partName(int partID);
 
-double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-6);
+// double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-6);
+
+double compute_integrand(int partID, double x, double eta, double theta, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-6);
 
 double compute_Phi(int partID, double x, double eta, int N = 10000, int nbin = 10, double Ep = 1., int Ntheta = 2*18, double xmin = 1.e-6);
 
@@ -77,22 +84,24 @@ void Phi2File(std::string path, int partID, double x_a, double x_b, double eta, 
     return;
 }
 
-void compute_s_tabs(int partID, int N, double s, int nbin=20, double smin=1.e-3, double smax=1.e3);
+// void integrand2File(std::string path, int partID, double x_a, double x_b, double eta, double theta, int N);
+
+// void compute_s_tabs(int partID, int N, double s, int nbin=20, double smin=1.e-3, double smax=1.e3);
+
+void compute_tabs(std::string path, int partID, int N = 10000, int nbin = 10, double Ep = 1., double xmin = 1.e-6);
 
 // If you want to see warnings please uncomment line 283 in sophia_interface.cpp file
 
 int main() {
     std::cout.precision(10);
 
-    double eta_0 = 0.313;
-
     // double x = 1.e-1;
     // double eta = 1.5*eta_0;
 
     // std::cout<<"Phi = "<<x*compute_Phi(22,x,eta,10000,10,1e4,18)<<"\n";
 
-    Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,50);
-    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,50);
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_1.5eta0_sophia.txt",22,1.e-4,1.,1.5*eta_0,20);
+    // Phi2File("./src/kelner_aharonian_2008/fig2_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,30.*eta_0,30);
 
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_1.5eta0_sophia.txt",-11,1.e-4,1.,1.5*eta_0,50);
     // Phi2File("./src/kelner_aharonian_2008/fig3_values/positron_30eta0_sophia.txt",-11,1.e-4,1.,30.*eta_0,50); ///!!!
@@ -109,6 +118,12 @@ int main() {
     // Phi2File("./src/kelner_aharonian_2008/fig_values/electron_100eta0_sophia.txt",11,1.e-4,1.,100*eta_0,50);
 
     // compute_s_tabs(22,1e0,1e1);
+
+
+    // integrand2File("./src/integrand_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,40.*eta_0,50.,30);
+    // integrand2File("./src/integrand_values/gamma_30eta0_sophia_.txt",22,1.e-4,1.,40.*eta_0,50.,30);
+
+    compute_tabs("./src/integrand_values/",22,1e4,30,1e2,1e-6);
 
     return 0;
 }
@@ -308,6 +323,47 @@ double sophia_histogram::value(double x){
     return (((double(H[find_index(x)])/double(eventCounter))/dlog10x)/x)/std::log(10);
 }
 
+double sophia_histogram::integrand(double x){
+// ****** INPUT ******************************************
+// partID = sophia ID of produced particles: 
+//  1000010010 -> proton
+// -1000010010 -> anti-proton
+//  1000000010 -> neutron
+// -1000000010 -> anti-neutron
+//          22 -> photon
+//          11 -> electron
+//         -11 -> positron
+//          12 -> nu_e
+//         -12 -> anti-nu_e
+//          14 -> nu_mu
+//         -14 -> anti-nu_mu
+//         111 -> pi0
+//         211 -> pi+
+//        -211 -> pi-
+// 
+// ****** OUTPUT *****************************************
+// integrand for computation Phi function (integral over the angles) [cm^3/(s rad)]
+// *******************************************************
+    return c*(1.-std::cos(theta*pi/180.))*crossection(eps_prime(eta,theta))*(this->value(x));
+}
+
+void sophia_histogram::save_integrand(std::string path){
+    static double x;
+
+    std::ofstream outfile;
+    outfile.open(path.c_str());
+
+    outfile << "#x\t" << "f [cm^3/s]\n";
+    
+    for(int i=0;i<nbin;i++)
+    {
+        x = x_i(i);
+        outfile<<x<<" "<<this->integrand(x)<<"\n";
+    }
+
+    outfile.close();
+}
+
 std::string partName(int partID){
     switch (partID)
     {
@@ -333,16 +389,16 @@ std::string partName(int partID){
             return "positron";
             break;
         case 12:
-            return "electron neutrino";
+            return "electron_neutrino";
             break;
         case -12:
-            return "electron antineutrino";
+            return "electron_antineutrino";
             break;
         case 14:
-            return "muon neutrino";
+            return "muon_neutrino";
             break;
         case -14:
-            return "muon antineutrino";
+            return "muon_antineutrino";
             break;
         case 111:
             return "pi0";
@@ -358,29 +414,51 @@ std::string partName(int partID){
     }
 }
 
-double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N, int nbin, double Ep, double xmin){
-// ****** INPUT ******************************************
-// partID = sophia ID of produced particles: 
-//  1000010010 -> proton
-// -1000010010 -> anti-proton
-//  1000000010 -> neutron
-// -1000000010 -> anti-neutron
-//          22 -> photon
-//          11 -> electron
-//         -11 -> positron
-//          12 -> nu_e
-//         -12 -> anti-nu_e
-//          14 -> nu_mu
-//         -14 -> anti-nu_mu
-//         111 -> pi0
-//         211 -> pi+
-//        -211 -> pi-
-// 
-// ****** OUTPUT *****************************************
-// integrand for computation Phi function (integral over the angles) [cm^3/(s rad)]
-// *******************************************************
-    return c*(1.-std::cos(theta*pi/180.))*crossection(eps_prime(eta,theta))*HIST.value(x);
+// double integrand(sophia_histogram &HIST, int partID, double x, double eta, double theta, int N, int nbin, double Ep, double xmin){
+// // ****** INPUT ******************************************
+// // partID = sophia ID of produced particles: 
+// //  1000010010 -> proton
+// // -1000010010 -> anti-proton
+// //  1000000010 -> neutron
+// // -1000000010 -> anti-neutron
+// //          22 -> photon
+// //          11 -> electron
+// //         -11 -> positron
+// //          12 -> nu_e
+// //         -12 -> anti-nu_e
+// //          14 -> nu_mu
+// //         -14 -> anti-nu_mu
+// //         111 -> pi0
+// //         211 -> pi+
+// //        -211 -> pi-
+// // 
+// // ****** OUTPUT *****************************************
+// // integrand for computation Phi function (integral over the angles) [cm^3/(s rad)]
+// // *******************************************************
+//     return c*(1.-std::cos(theta*pi/180.))*crossection(eps_prime(eta,theta))*HIST.value(x);
+// }
 
+double compute_integrand(int partID, double x, double eta, double theta, int N, int nbin, double Ep, double xmin){
+// ****** OUTPUT *****************************************
+// integrand(theta) value
+// *******************************************************    
+    static sophia_interface SI;
+    static sophiaevent_output seo;
+
+    double eps = (mp2c4*eta/(4.*Ep));
+
+    sophia_histogram HIST(partID,eta,theta,Ep,nbin,xmin,1.);
+
+    for(int i=0;i<N;i++){
+        seo = SI.sophiaevent_mod(Ep, eps, theta, false);
+        HIST.add(seo);
+    }
+
+    HIST.make_hist();
+    // HIST.print_hist();
+
+    // return integrand(HIST,partID,x,eta,theta,N,nbin,Ep);
+    return HIST.integrand(x);
 }
 
 double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep, int Ntheta, double xmin){
@@ -401,17 +479,7 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
     {
         theta_i+=dtheta;
 
-        sophia_histogram HIST(partID,eta,theta_i,Ep,nbin,xmin,1.);
-
-        for(int i=0;i<N;i++){
-            seo = SI.sophiaevent_mod(Ep, eps, theta_i, false);
-            HIST.add(seo);
-        }
-
-        HIST.make_hist();
-        // HIST.print_hist();
-
-        Y.push_back(integrand(HIST,partID,x,eta,theta_i,N,nbin,Ep)*std::sin(theta_i*pi/180.));
+        Y.push_back(compute_integrand(partID,x,eta,theta_i,N,nbin,Ep,xmin)*std::sin(theta_i*pi/180.));
     }
 
     Y.push_back(0.);
@@ -426,20 +494,90 @@ double compute_Phi(int partID, double x, double eta, int N, int nbin, double Ep,
     return (F*(pi/180.)*dtheta*0.5)/(2.);
 }
 
-void compute_s_tabs(int partID, int N, double s, int nbin, double smin, double smax)
-{
+// void compute_s_tabs(int partID, int N, double s, int nbin, double smin, double smax)
+// {
+//     static sophia_interface SI;
+//     static sophiaevent_output seo;
+
+//     sophia_histogram HIST(partID,nbin,smin,smax);
+
+//     for(int i=0;i<N;i++){
+//         seo = SI.sophiaevent_mod2(s, false);
+//         HIST.add(seo);
+//     }
+//     // HIST.print_data();
+//     HIST.make_hist_s();
+//     HIST.print_hist();
+    
+//     return;
+// }
+
+// void integrand2File(std::string path, int partID, double x_a, double x_b, double eta, double theta, int N){
+//     std::ofstream outfile;
+//     outfile.open(path.c_str());
+
+//     std::string id = partName(partID);
+//     // outfile << "#Particle type: " << id << "\n";
+    
+//     std::cout<<"=================================================================\n";
+//     std::cout<<"id = "<<id<<" | x_a = "<<x_a<<" | x_b = "<<x_b<<" | "<<eta<<"  | theta = "<<theta<<" deg\n";
+//     std::cout<<"=================================================================\n";
+    
+//     std::cout << "#x\t" << "f [cm^3/s]\n";
+//     outfile << "#x\t" << "f [cm^3/s]\n";
+    
+//     double log10xmin = std::log10(x_a), log10xmax = std::log10(x_b), dlog10x = (log10xmax - log10xmin )/double(N);
+//     double log10x = log10xmin, x = std::pow(10.,log10x);
+//     double f;
+
+//     while (log10x <= log10xmax)
+//     {
+//         f = compute_integrand(partID,x,eta,theta,1e4,100,1e2,x_a);
+        
+//         outfile << x << "\t" << f << "\n";
+//         std::cout << x << "\t" << f << "\n";
+
+//         log10x+=dlog10x;
+//         x = std::pow(10.,log10x);
+//     }
+    
+//     outfile.close();
+//     std::cout<<"=================================================================\n";
+    
+//     return;
+// }
+
+void compute_tabs(std::string path, int partID, int N, int nbin, double Ep, double xmin){
+    static std::string _eta[22] = {"1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0", "3.0", "4.0", 
+                                   "5.0", "6.0", "7.0", "8.0", "9.0", "10.0", "20.0", "30.0", "40.0", "100.0"};
     static sophia_interface SI;
     static sophiaevent_output seo;
 
-    sophia_histogram HIST(partID,nbin,smin,smax);
+    double eps;
+    std::string full_path;
 
-    for(int i=0;i<N;i++){
-        seo = SI.sophiaevent_mod2(s, false);
-        HIST.add(seo);
-    }
-    // HIST.print_data();
-    HIST.make_hist_s();
-    HIST.print_hist();
+    std::string id = partName(partID);
     
-    return;
+    for(int i=0;i<22;i++)
+    {
+        // std::cout<<_eta[i]<<"\n";
+        for(int theta=0;theta<=180;theta+=10)
+        {
+            full_path = path+id+"/"+id+"_"+_eta[i]+"eta0_"+std::to_string(theta)+"theta.txt";
+            std::cout<<full_path<<"\n";
+
+            eps = (mp2c4*std::stod(_eta[i])/(4.*Ep));
+
+            sophia_histogram HIST(partID,std::stod(_eta[i]),theta,Ep,nbin,xmin,1.);
+
+            for(int i=0;i<N;i++){
+                seo = SI.sophiaevent_mod(Ep, eps, theta, false);
+                HIST.add(seo);
+            }
+
+            HIST.make_hist();
+            HIST.save_integrand(full_path);
+        }
+    }
+
 }

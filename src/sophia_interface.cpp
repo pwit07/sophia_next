@@ -798,7 +798,7 @@ void sophia_interface::gamma_h(double Ecm, int ip1, int Imode) {
 
             // avoid infinite looping
             itry++;
-            if (itry > 50) {
+            if (itry > 150) {
                 throw std::runtime_error("gamma_h: more than 50 internal rejections");
             }
 

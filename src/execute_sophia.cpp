@@ -123,8 +123,13 @@ int main() {
     // integrand2File("./src/integrand_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,40.*eta_0,50.,30);
     // integrand2File("./src/integrand_values/gamma_30eta0_sophia_.txt",22,1.e-4,1.,40.*eta_0,50.,30);
 
-    compute_tabs("./src/integrand_values/",22,1e4,30,1e2,1e-6);
-
+    // compute_tabs("./src/integrand_values/",22,1e5,30,1e2,1e-6);
+    // compute_tabs("./src/integrand_values/",11,1e5,30,1e2,1e-6);
+    // compute_tabs("./src/integrand_values/",-11,1e5,30,1e2,1e-6);
+    // compute_tabs("./src/integrand_values/",12,1e5,30,1e2,1e-6);
+    // compute_tabs("./src/integrand_values/",-12,1e5,30,1e2,1e-6);
+     compute_tabs("./src/integrand_values/",14,1e5,30,1e2,1e-6);
+    compute_tabs("./src/integrand_values/",-14,1e5,30,1e2,1e-6);
     return 0;
 }
 

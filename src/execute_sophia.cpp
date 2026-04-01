@@ -573,7 +573,7 @@ void compute_tabs(std::string path, int partID, int N, int nbin, double Ep, doub
 
             eps = (mp2c4*std::stod(_eta[i])/(4.*Ep));
 
-            sophia_histogram HIST(partID,std::stod(_eta[i]),theta,Ep,nbin,xmin,1.);
+            sophia_histogram HIST(partID,std::stod(_eta[i])*eta_0,theta,Ep,nbin,xmin,1.);
 
             for(int i=0;i<N;i++){
                 seo = SI.sophiaevent_mod(Ep, eps, theta, false);

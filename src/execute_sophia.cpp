@@ -123,13 +123,13 @@ int main() {
     // integrand2File("./src/integrand_values/gamma_30eta0_sophia.txt",22,1.e-4,1.,40.*eta_0,50.,30);
     // integrand2File("./src/integrand_values/gamma_30eta0_sophia_.txt",22,1.e-4,1.,40.*eta_0,50.,30);
 
-    // compute_tabs("./src/integrand_values/",22,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",11,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",-11,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",12,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",-12,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",14,1e6,30,1e2,1e-6);
-    // compute_tabs("./src/integrand_values/",-14,1e6,30,1e2,1e-6);
+    compute_tabs("./src/integrand_values/", 22,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/", 11,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/",-11,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/", 12,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/",-12,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/", 14,1e6,40,1e2,1e-6);
+    compute_tabs("./src/integrand_values/",-14,1e6,40,1e2,1e-6);
     
     return 0;
 }
@@ -572,7 +572,7 @@ void compute_tabs(std::string path, int partID, int N, int nbin, double Ep, doub
             full_path = path+id+"/"+id+"_"+_eta[i]+"eta0_"+std::to_string(theta)+"theta.txt";
             std::cout<<full_path<<"\n";
 
-            eps = (mp2c4*std::stod(_eta[i])/(4.*Ep));
+            eps = (mp2c4*std::stod(_eta[i])*eta_0/(4.*Ep));
 
             sophia_histogram HIST(partID,std::stod(_eta[i])*eta_0,theta,Ep,nbin,xmin,1.);
 
